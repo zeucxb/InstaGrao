@@ -5,8 +5,8 @@ import 'package:instagrao/helpers/validator.helper.dart';
 import 'package:instagrao/screens/login/login.bloc.dart';
 import 'package:instagrao/screens/login/login.event.dart';
 import 'package:instagrao/screens/login/login.state.dart';
-import 'package:instagrao/screens/main.screen.dart';
 import 'package:instagrao/screens/register/register.screen.dart';
+import 'package:instagrao/screens/timeline/timeline.screen.dart';
 import 'package:instagrao/shared/root/root.bloc.dart';
 import 'package:instagrao/shared/root/root.state.dart';
 import 'package:instagrao/widgets/divider-with-text/divider-with-text.dart';
@@ -50,7 +50,7 @@ class _LoginScreen extends State<LoginScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => MainPage(title: 'Home'),
+                builder: (context) => TimelineScreen(),
               ),
             );
           });

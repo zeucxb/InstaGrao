@@ -9,6 +9,8 @@ class View extends StatelessWidget {
     @required this.child,
     this.error = '',
     this.enableDefaultPadding = true,
+    this.enableScroll = true,
+    this.floatingActionButton,
   }) : super(key: key);
 
   final String title;
@@ -16,21 +18,28 @@ class View extends StatelessWidget {
   final Widget child;
 
   final bool enableDefaultPadding;
+  final bool enableScroll;
+  final Widget floatingActionButton;
 
   @override
   Widget build(BuildContext context) {
     var defaultPadding = 0.0;
     if (this.enableDefaultPadding) defaultPadding = 20.0;
 
+    final errorHandler = ErrorHandler(
+      error: error,
+      child: child,
+    );
+
     return Scaffold(
       appBar: NavigationBar.widget(context, title),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(defaultPadding),
-        child: ErrorHandler(
-          error: error,
-          child: child,
-        ),
-      ),
+      floatingActionButton: floatingActionButton,
+      body: enableScroll
+          ? SingleChildScrollView(
+              padding: EdgeInsets.all(defaultPadding),
+              child: errorHandler,
+            )
+          : errorHandler,
     );
   }
 }

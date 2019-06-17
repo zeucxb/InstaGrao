@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:bloc/bloc.dart';
 
@@ -42,14 +43,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       screenBloc.enableLoader();
 
       try {
-        if (
-          event.email.isEmpty
-          || event.password.isEmpty
-        ) throw('Complete all required fields!');
+        if (event.email.isEmpty || event.password.isEmpty)
+          throw ('Complete all required fields!');
 
         // API Resquest code.
+        await fakeLogin(event.email, event.password);
 
-        rootBloc.login();
         yield LoginState.success('JWTtoken');
       } catch (error) {
         yield LoginState.failure(error.toString());
@@ -57,5 +56,16 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       screenBloc.disableLoader();
     }
+  }
+
+  Future fakeLogin(String email, String password) async {
+    final storage = new FlutterSecureStorage();
+
+    String name = await storage.read(key: '$email-$password');
+
+    if (name != null)
+      rootBloc.login();
+    else
+      throw 'Invalid email (and/or) password';
   }
 }

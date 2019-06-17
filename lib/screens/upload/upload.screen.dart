@@ -5,21 +5,21 @@ import 'package:instagrao/widgets/date-picker/date-picker.dart';
 import 'package:instagrao/widgets/primary-button/primary-button.dart';
 import 'package:instagrao/helpers/validator.helper.dart';
 
-import 'package:instagrao/screens/register/register.bloc.dart';
-import 'package:instagrao/screens/register/register.event.dart';
-import 'package:instagrao/screens/register/register.state.dart';
+import 'package:instagrao/screens/upload/upload.bloc.dart';
+import 'package:instagrao/screens/upload/upload.event.dart';
+import 'package:instagrao/screens/upload/upload.state.dart';
 import 'package:instagrao/widgets/screen/screen.bloc.dart';
 import 'package:instagrao/widgets/screen/screen.widget.dart';
 import 'package:instagrao/widgets/view/view.widget.dart';
 
-class RegisterScreen extends StatefulWidget {
+class UploadScreen extends StatefulWidget {
   @override
-  State<RegisterScreen> createState() => _RegisterScreen();
+  State<UploadScreen> createState() => _UploadScreen();
 }
 
-class _RegisterScreen extends State<RegisterScreen> {
+class _UploadScreen extends State<UploadScreen> {
   ScreenBloc screenBloc;
-  RegisterBloc registerBloc;
+  UploadBloc uploadBloc;
 
   var _autoValidate = false;
 
@@ -40,15 +40,15 @@ class _RegisterScreen extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     screenBloc = ScreenBloc();
-    registerBloc = RegisterBloc(screenBloc);
+    uploadBloc = UploadBloc(screenBloc);
 
-    return BlocBuilder<RegisterEvent, RegisterState>(
-      bloc: registerBloc,
+    return BlocBuilder<UploadEvent, UploadState>(
+      bloc: uploadBloc,
       builder: (
         BuildContext context,
-        RegisterState registerState,
+        UploadState uploadState,
       ) {
-        if (registerState.success) {
+        if (uploadState.success) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.pop(
               context,
@@ -60,8 +60,8 @@ class _RegisterScreen extends State<RegisterScreen> {
           bloc: screenBloc,
           children: [
             View(
-              title: 'Register',
-              error: registerState.error,
+              title: 'Upload',
+              error: uploadState.error,
               child: Form(
                 key: _formKey,
                 autovalidate: _autoValidate,
@@ -94,9 +94,9 @@ class _RegisterScreen extends State<RegisterScreen> {
                     ),
                     PrimaryButton.widget(
                       context,
-                      'Register',
-                      registerState.isRegisterButtonEnabled
-                          ? _onRegisterButtonPressed
+                      'Upload',
+                      uploadState.isUploadButtonEnabled
+                          ? _onUploadButtonPressed
                           : null,
                     ),
                   ],
@@ -109,9 +109,9 @@ class _RegisterScreen extends State<RegisterScreen> {
     );
   }
 
-  _onRegisterButtonPressed() {
+  _onUploadButtonPressed() {
     if (_formKey.currentState.validate()) {
-      registerBloc.onRegisterButtonPressed(
+      uploadBloc.onUploadButtonPressed(
         name: nameCtrl.text,
         email: emailCtrl.text,
         birthday: birthday.toString(),
@@ -127,7 +127,7 @@ class _RegisterScreen extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    registerBloc.dispose();
+    uploadBloc.dispose();
     super.dispose();
   }
 }

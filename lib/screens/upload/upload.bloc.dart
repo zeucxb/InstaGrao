@@ -5,25 +5,25 @@ import 'package:bloc/bloc.dart';
 import 'package:instagrao/helpers/error.helper.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'package:instagrao/screens/register/register.event.dart';
-import 'package:instagrao/screens/register/register.state.dart';
+import 'package:instagrao/screens/upload/upload.event.dart';
+import 'package:instagrao/screens/upload/upload.state.dart';
 import 'package:instagrao/widgets/screen/screen.bloc.dart';
 
-class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
+class UploadBloc extends Bloc<UploadEvent, UploadState> {
   final ScreenBloc screenBloc;
 
-  RegisterBloc(this.screenBloc);
+  UploadBloc(this.screenBloc);
 
-  RegisterState get initialState => RegisterState.initial();
+  UploadState get initialState => UploadState.initial();
 
-  void onRegisterButtonPressed({
+  void onUploadButtonPressed({
     String name,
     String email,
     String birthday,
     String password,
     String cPassword,
   }) {
-    dispatch(RegisterButtonPressed(
+    dispatch(UploadButtonPressed(
       name: name,
       email: email,
       birthday: birthday,
@@ -33,8 +33,8 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   }
 
   @override
-  Stream<RegisterState> mapEventToState(RegisterEvent event) async* {
-    if (event is RegisterButtonPressed) {
+  Stream<UploadState> mapEventToState(UploadEvent event) async* {
+    if (event is UploadButtonPressed) {
       screenBloc.enableLoader();
 
       try {
@@ -50,9 +50,9 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
         // API Request code here.
 
-        fakeRegister(event.email, event.password, event.email);
+        fakeUpload(event.email, event.password, event.email);
 
-        yield RegisterState.success();
+        yield UploadState.success();
       } catch (error) {
         if (error is String) {
           try {
@@ -60,12 +60,12 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
 
             var errorMessage = ErrorHelper.formatValidationError(validationError);
 
-            yield RegisterState.failure(errorMessage);
+            yield UploadState.failure(errorMessage);
           } catch (e) {
-            yield RegisterState.failure(error);
+            yield UploadState.failure(error);
           }
         } else {
-          yield RegisterState.failure(error.toString());
+          yield UploadState.failure(error.toString());
         }
       }
 
@@ -73,7 +73,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     }
   }
 
-  void fakeRegister(String email, String password, String name) async {
+  void fakeUpload(String email, String password, String name) async {
     final storage = new FlutterSecureStorage();
 
     await storage.write(key: '$email-$password', value: name);
