@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:instagrao/widgets/date-picker/date-picker.dart';
 import 'package:instagrao/widgets/primary-button/primary-button.dart';
+import 'package:image_picker_modern/image_picker_modern.dart';
 import 'package:instagrao/helpers/validator.helper.dart';
 
 import 'package:instagrao/screens/upload/upload.bloc.dart';
@@ -25,16 +29,25 @@ class _UploadScreen extends State<UploadScreen> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final nameCtrl = TextEditingController();
-  final emailCtrl = TextEditingController();
-  final passwordCtrl = TextEditingController();
-  final cPasswordCtrl = TextEditingController();
-  var birthday = DateTime(DateTime.now().year - 18);
+  final titleCtrl = TextEditingController();
+  final bodyCtrl = TextEditingController();
 
-  _onDatePickerChanged(DateTime newDateTime) {
-    setState(
-      () => birthday = newDateTime,
-    );
+  File _image;
+
+  Future getImage() async {
+    final File image = await ImagePicker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      final Directory appDocDir = await getApplicationDocumentsDirectory();
+      final String path = appDocDir.path;
+
+      final String fileName = basename(image.path);
+      final File newImage = await image.copy('$path/$fileName');
+
+      setState(() {
+        _image = newImage;
+      });
+    }
   }
 
   @override
@@ -67,30 +80,26 @@ class _UploadScreen extends State<UploadScreen> {
                 autovalidate: _autoValidate,
                 child: Column(
                   children: <Widget>[
+                    _image == null
+                        ? IconButton(
+                            onPressed: getImage,
+                            tooltip: 'Pick Image',
+                            icon: Icon(Icons.add_a_photo),
+                          )
+                        : Image.file(
+                            _image,
+                            fit: BoxFit.cover,
+                          ),
                     TextFormField(
-                      decoration: InputDecoration(labelText: 'Name:'),
-                      controller: nameCtrl,
+                      decoration: InputDecoration(labelText: 'Title:'),
+                      controller: titleCtrl,
                       validator: ValidatorHelper.notEmpty,
                     ),
                     TextFormField(
-                      decoration: InputDecoration(labelText: 'Email:'),
-                      keyboardType: TextInputType.emailAddress,
-                      controller: emailCtrl,
-                      validator: ValidatorHelper.validateEmail,
-                    ),
-                    DatePicker().widget(context, 'Birthday:', birthday, _onDatePickerChanged),
-                    TextFormField(
-                      decoration: InputDecoration(labelText: 'Password:'),
-                      controller: passwordCtrl,
-                      obscureText: true,
+                      decoration: InputDecoration(labelText: 'Body:'),
+                      controller: bodyCtrl,
                       validator: ValidatorHelper.notEmpty,
-                    ),
-                    TextFormField(
-                      decoration:
-                          InputDecoration(labelText: 'Confirm Password:'),
-                      controller: cPasswordCtrl,
-                      obscureText: true,
-                      validator: ValidatorHelper.notEmpty,
+                      maxLines: 3,
                     ),
                     PrimaryButton.widget(
                       context,
@@ -111,12 +120,11 @@ class _UploadScreen extends State<UploadScreen> {
 
   _onUploadButtonPressed() {
     if (_formKey.currentState.validate()) {
+      final path = (_image != null) ? _image.path : null;
       uploadBloc.onUploadButtonPressed(
-        name: nameCtrl.text,
-        email: emailCtrl.text,
-        birthday: birthday.toString(),
-        password: passwordCtrl.text,
-        cPassword: cPasswordCtrl.text,
+        image: path,
+        title: titleCtrl.text,
+        body: bodyCtrl.text,
       );
     } else {
       setState(() {

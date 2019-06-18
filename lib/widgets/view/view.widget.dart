@@ -10,6 +10,7 @@ class View extends StatelessWidget {
     this.error = '',
     this.enableDefaultPadding = true,
     this.enableScroll = true,
+    this.showLogout = false,
     this.floatingActionButton,
   }) : super(key: key);
 
@@ -19,6 +20,7 @@ class View extends StatelessWidget {
 
   final bool enableDefaultPadding;
   final bool enableScroll;
+  final bool showLogout;
   final Widget floatingActionButton;
 
   @override
@@ -32,7 +34,7 @@ class View extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: NavigationBar.widget(context, title),
+      appBar: NavigationBar(showLogout: showLogout).widget(context, title),
       floatingActionButton: floatingActionButton,
       body: enableScroll
           ? SingleChildScrollView(

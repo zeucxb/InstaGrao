@@ -1,6 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:instagrao/screens/upload/upload.screen.dart';
+import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'package:instagrao/screens/upload/upload.screen.dart';
 import 'package:instagrao/widgets/view/view.widget.dart';
 
 class TimelineScreen extends StatefulWidget {
@@ -11,14 +15,8 @@ class TimelineScreen extends StatefulWidget {
 }
 
 class _TimelineScreen extends State<TimelineScreen> {
-  final items = List<Map<String, String>>.generate(
-      3,
-      (i) => {
-            'nick': 'zeucxb',
-            'title': 'Item ${i + 1}',
-            'body':
-                'Film Title adjsjdjakldjsa daklsjdkjasldjskaljdksaljdlas dsajkdljaslkjdsajdkljsakdjlajdljlkasjdlkjald asdjksajdlksajdjsakdjkasjdklajsdkjasljdklasjdklsajkdjksajdklsd dljaskjdakjdklsjaksdjkaljdklasjdklsjaldkjsakldjlskajdklsjdkljadlksjdklajkldjasjdklas'
-          });
+  final title = 'InstaGrão';
+  final storage = new FlutterSecureStorage();
 
   final titleCtrl = TextEditingController();
   final titleFocus = FocusNode();
@@ -26,14 +24,47 @@ class _TimelineScreen extends State<TimelineScreen> {
   final bodyFocus = FocusNode();
 
   int edditable;
+  String username;
+  List posts = [];
+
+  _TimelineScreen() {}
+
+  Future<List> getPosts() async {
+    final postsStr = await storage.read(key: 'posts');
+
+    return json.decode(postsStr);
+  }
+
+  updatePosts(List posts) async {
+    await storage.write(key: 'posts', value: json.encode(posts));
+  }
+
+  updatePostByIndex(int index, Map post) async {
+    posts[index] = post;
+
+    await storage.write(key: 'posts', value: json.encode(posts));
+  }
+
+  bool isEdditable(int index) {
+    return (edditable == index);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final title = 'InstaGrão';
+    storage.read(key: 'username').then((u) {
+      username = u;
+    });
+
+    getPosts().then((p) {
+      setState(() {
+        posts = p;
+      });
+    });
 
     return View(
       title: title,
       enableScroll: false,
+      showLogout: true,
       floatingActionButton: FloatingActionButton(
           onPressed: () {
             Navigator.push(
@@ -47,9 +78,9 @@ class _TimelineScreen extends State<TimelineScreen> {
           backgroundColor: Colors.purple,
           child: Icon(Icons.add)),
       child: ListView.builder(
-        itemCount: items.length,
+        itemCount: posts.length,
         itemBuilder: (context, index) {
-          final item = items[index];
+          final item = posts[index];
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -63,34 +94,56 @@ class _TimelineScreen extends State<TimelineScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Text(
-                      'zeucxb',
+                      item['username'],
                       style: TextStyle(
                           fontSize: 18.0,
                           fontWeight: FontWeight.bold,
                           color: Colors.black),
                     ),
-                    if (item['nick'] == 'zeucxb')
-                      IconButton(
-                        icon: Icon(
-                          (edditable == index) ? Icons.save : Icons.edit,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            if (edditable == index) {
-                              item['title'] = titleCtrl.text;
-                              item['body'] = bodyCtrl.text;
-                              edditable = null;
-                            } else {
-                              titleCtrl.value =
-                                  TextEditingValue(text: items[index]['title']);
-                              bodyCtrl.value =
-                                  TextEditingValue(text: items[index]['body']);
-                              edditable = index;
-                            }
-                          });
-                        },
-                      )
+                    if (item['username'] == username)
+                      Row(
+                        children: <Widget>[
+                          if (isEdditable(index))
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete,
+                                size: 20,
+                              ),
+                              onPressed: () async {
+                                posts.removeAt(index);
+                                await updatePosts(posts);
+                                setState(() {
+                                  edditable = null;
+                                });
+                              },
+                            ),
+                          IconButton(
+                            icon: Icon(
+                              (isEdditable(index)) ? Icons.save : Icons.edit,
+                              size: 20,
+                            ),
+                            onPressed: () async {
+                              if (isEdditable(index)) {
+                                item['title'] = titleCtrl.text;
+                                item['body'] = bodyCtrl.text;
+
+                                await updatePostByIndex(index, item);
+                              }
+                              setState(() {
+                                if (isEdditable(index)) {
+                                  edditable = null;
+                                } else {
+                                  titleCtrl.value = TextEditingValue(
+                                      text: posts[index]['title']);
+                                  bodyCtrl.value = TextEditingValue(
+                                      text: posts[index]['body']);
+                                  edditable = index;
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -99,8 +152,8 @@ class _TimelineScreen extends State<TimelineScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(0)),
                 ),
-                child: Image.network(
-                  'https://placeimg.com/640/480/any',
+                child: Image.file(
+                  File(item['image']),
                   fit: BoxFit.cover,
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -108,7 +161,7 @@ class _TimelineScreen extends State<TimelineScreen> {
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(10),
-                child: (edditable == index)
+                child: (isEdditable(index))
                     ? EditableText(
                         controller: titleCtrl,
                         focusNode: titleFocus,
@@ -129,7 +182,7 @@ class _TimelineScreen extends State<TimelineScreen> {
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
-                child: (edditable == index)
+                child: (isEdditable(index))
                     ? EditableText(
                         controller: bodyCtrl,
                         focusNode: bodyFocus,

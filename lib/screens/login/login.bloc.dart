@@ -63,9 +63,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
     String name = await storage.read(key: '$email-$password');
 
-    if (name != null)
+    if (name != null) {
+      await storage.write(key: 'username', value: name);
       rootBloc.login();
-    else
+    } else {
       throw 'Invalid email (and/or) password';
+    }
   }
 }

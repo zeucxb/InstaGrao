@@ -27,6 +27,8 @@ dependencies:
   flutter_slidable: ^0.4.9
   intl: ^0.15.2
   flutter_secure_storage: ^3.2.1+1
+  image_picker_modern: ^0.4.12+2
+  path_provider: ^1.1.0
 
 dev_dependencies:
   flutter_test:

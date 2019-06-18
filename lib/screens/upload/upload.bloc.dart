@@ -17,18 +17,14 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
   UploadState get initialState => UploadState.initial();
 
   void onUploadButtonPressed({
-    String name,
-    String email,
-    String birthday,
-    String password,
-    String cPassword,
+    String image,
+    String title,
+    String body,
   }) {
     dispatch(UploadButtonPressed(
-      name: name,
-      email: email,
-      birthday: birthday,
-      password: password,
-      cPassword: cPassword,
+      image: image,
+      title: title,
+      body: body,
     ));
   }
 
@@ -38,19 +34,12 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
       screenBloc.enableLoader();
 
       try {
-        if (
-          event.name.isEmpty
-          || event.email.isEmpty
-          || event.birthday.isEmpty
-          || event.password.isEmpty
-          || event.cPassword.isEmpty
-        ) throw('Complete all required fields!');
-
-        if (event.password != event.cPassword) throw('Invalid password confirmation!');
+        if (event.title.isEmpty || event.body.isEmpty || event.image == null)
+          throw ('Complete all required fields!');
 
         // API Request code here.
 
-        fakeUpload(event.email, event.password, event.email);
+        await fakeUpload(event.image, event.title, event.body);
 
         yield UploadState.success();
       } catch (error) {
@@ -58,7 +47,8 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
           try {
             var validationError = json.decode(error)['validationError'];
 
-            var errorMessage = ErrorHelper.formatValidationError(validationError);
+            var errorMessage =
+                ErrorHelper.formatValidationError(validationError);
 
             yield UploadState.failure(errorMessage);
           } catch (e) {
@@ -73,9 +63,35 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
     }
   }
 
-  void fakeUpload(String email, String password, String name) async {
+  Future<List> getPosts() async {
     final storage = new FlutterSecureStorage();
 
-    await storage.write(key: '$email-$password', value: name);
+    String postsStr = await storage.read(key: 'posts');
+
+    if (postsStr.isNotEmpty) {
+      return json.decode(postsStr);
+    } else {
+      return [];
+    }
+  }
+
+  Future fakeUpload(String image, String title, String body) async {
+    final storage = new FlutterSecureStorage();
+
+    String username = await storage.read(key: 'username');
+    List posts = await getPosts();
+
+    Map post = {
+      'username': username,
+      'image': image,
+      'title': title,
+      'body': body,
+    };
+
+    posts.add(post);
+    
+    final postsStr = json.encode(posts);
+
+    await storage.write(key: 'posts', value: postsStr);
   }
 }
