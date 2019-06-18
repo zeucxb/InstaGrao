@@ -1,6 +1,8 @@
-# instagrao
+# InstaGrão
 
-A new Flutter project.
+The social network that your "grão" was waiting for.
+
+![Imgur](https://i.imgur.com/b6ZUg2y.jpg)
 
 ## Getting Started
 
